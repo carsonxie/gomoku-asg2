@@ -232,6 +232,7 @@ class GtpConnection():
         If the winner is opponent or the result is unknown,
         this function only generate the winner or unknown message
         """
+        self.board.legal_move_around_stone_blocks()
         self.respond("the winner is xx [move] // unknown")
     
     #play
@@ -260,7 +261,6 @@ class GtpConnection():
             
             # tuple (x,y) => coord
             coord = move_to_coord(args[1], self.board.size)
-            print("coords type: "+str(type(coord)))
             
             if coord:
                 # int x => move

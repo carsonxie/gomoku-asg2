@@ -22,6 +22,7 @@ class SimpleGoBoard(object):
     def pt(self, row, col):
         return coord_to_point(row, col, self.size)
 
+    # useless in gomoku
     def is_legal(self, point, color):
         """
         Check whether it is legal for color to play on point
@@ -47,6 +48,7 @@ class SimpleGoBoard(object):
         self.board[point] = EMPTY
         return legal
 
+    # useless in gomoku
     def _detect_captures(self, point, opp_color):
         """
         Did move on point capture something?
@@ -102,6 +104,7 @@ class SimpleGoBoard(object):
         assert row <= self.size
         return row * self.NS + 1
         
+    # useless in gomoku
     def _initialize_empty_points(self, board):
         """
         Fills points on the board with EMPTY
@@ -132,6 +135,7 @@ class SimpleGoBoard(object):
             else:
                 self.neighbors.append(self._on_board_neighbors(point))
         
+    #useless in gomuku
     def is_eye(self, point, color):
         """
         Check if point is a simple eye for color
@@ -159,10 +163,12 @@ class SimpleGoBoard(object):
                 return False
         return True
 
+    #useless in gomoku
     def _stone_has_liberty(self, stone):
         lib = self.find_neighbor_of_color(stone, EMPTY)
         return lib != None
 
+    #useless in gomoku
     def _get_liberty(self, block):
         """
         Find any liberty of the given block.
@@ -175,6 +181,7 @@ class SimpleGoBoard(object):
                 return lib
         return None
 
+    #useless in gomoku
     def _has_liberty(self, block):
         """
         Check if the given block has any liberty.
@@ -418,3 +425,28 @@ class SimpleGoBoard(object):
                 return True, BLACK
 
         return False, None
+
+    def legal_move_around_stone_blocks(self):
+
+        legal_move = []
+
+        black_points=where1d(self.board == BLACK).tolist()
+        white_points=where1d(self.board == WHITE).tolist()
+        not_empty_points = black_points + white_points#print("not empty points"+str(not_empty_points))
+
+        checking_set = set()
+
+        for point in not_empty_points:
+            checking_set.update(self._neighbors(point))
+            checking_set.update(self._diag_neighbors(point))
+
+        for point in checking_set:
+            if self.get_color(point) == EMPTY:#print(str(point)+"    is empty neighber")
+                legal_move.append(point)
+        
+        return legal_move
+
+
+            
+
+                

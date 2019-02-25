@@ -52,7 +52,7 @@ def coord_to_point(row, col, boardsize):
              coordinates of the point  1 <= row, col <= size
 
     Returns
-    -------
+    ------- 
     point
     
     Map (row, col) coordinates to array index

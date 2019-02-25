@@ -1,0 +1,6 @@
+play b f2
+play w e2
+play b d3
+play w d4
+showboard
+solve
