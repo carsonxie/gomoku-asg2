@@ -42,6 +42,8 @@ class GtpConnection():
             "genmove": self.genmove_cmd,
             "list_commands": self.list_commands_cmd,
             "play": self.play_cmd,
+            "solve":self.solve_cmd, # add a solve mapping in command dictionary
+            "timelimit":self.timelimit_cmd,
             "legal_moves": self.legal_moves_cmd,
             "gogui-rules_game_id": self.gogui_rules_game_id_cmd,
             "gogui-rules_board_size": self.gogui_rules_board_size_cmd,
@@ -212,25 +214,58 @@ class GtpConnection():
         sorted_moves = ' '.join(sorted(gtp_moves))
         self.respond(sorted_moves)
 
+    def timelimit_cmd(self,args):
+        """This command sets the maximum time to 
+        use for all following genmove or solve commands, 
+        until it is changed by another timelimit command.
+        
+        The argument seconds is an integer 
+        in the range 1 <= seconds <= 100. 
+        """
+        self.respond("Timelimit is set successfully")
+
+    def solve_cmd(self,args):
+        """
+        This function commputes the winner.
+        If the winner is current player, or the game is a draw,
+        write a move that ahieves this best possible result.
+        If the winner is opponent or the result is unknown,
+        this function only generate the winner or unknown message
+        """
+        self.respond("the winner is xx [move] // unknown")
+    
+    #play
     def play_cmd(self, args):
         """
         play a move args[1] for given color args[0] in {'b','w'}
         """
         try:
+             # board_color => b / w
+             # board_move => A1
             board_color = args[0].lower()
-            board_move = args[1]
+            board_move = args[1] 
+
             if board_color != "b" and board_color !="w":
                 self.respond("illegal move: \"{}\" wrong color".format(board_color))
                 return
-            color = color_to_int(board_color)
+            
+            # 1 => black;  2 => white;
+            color = color_to_int(board_color) 
+
             if args[1].lower() == 'pass':
                 self.board.play_move(PASS, color)
                 self.board.current_player = GoBoardUtil.opponent(color)
                 self.respond()
                 return
+            
+            # tuple (x,y) => coord
             coord = move_to_coord(args[1], self.board.size)
+            print("coords type: "+str(type(coord)))
+            
             if coord:
+                # int x => move
                 move = coord_to_point(coord[0],coord[1], self.board.size)
+
             else:
                 self.error("Error executing move {} converted from {}"
                            .format(move, args[1]))
@@ -245,6 +280,7 @@ class GtpConnection():
         except Exception as e:
             self.respond('{}'.format(str(e)))
 
+    #genmove
     def genmove_cmd(self, args):
         """
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
