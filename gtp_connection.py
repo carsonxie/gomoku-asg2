@@ -232,7 +232,18 @@ class GtpConnection():
         If the winner is opponent or the result is unknown,
         this function only generate the winner or unknown message
         """
+        self.board.undo_move()
         self.board.legal_move_around_stone_blocks()
+        self.respond('\n' + self.board2d())
+
+        self.board.undo_move()
+        self.board.legal_move_around_stone_blocks()
+        self.respond('\n' + self.board2d())
+
+        self.board.undo_move()
+        self.board.legal_move_around_stone_blocks()
+        self.respond('\n' + self.board2d())
+        
         self.respond("the winner is xx [move] // unknown")
     
     #play

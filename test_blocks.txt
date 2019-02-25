@@ -1,6 +1,19 @@
 play b f2
+showboard
+
 play w e2
+showboard
 play b d3
+showboard
 play w d4
+showboard
+solve
+
+play w a6
+showboard
+play b b3
+showboard
+
+play w c4
 showboard
 solve
