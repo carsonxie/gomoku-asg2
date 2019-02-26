@@ -367,8 +367,7 @@ class SimpleGoBoard(object):
         assert self.get_color(point) == opponent_color
         self.board[point] = EMPTY
         self.current_player = opponent_color
-
-        
+  
     def _point_direction_check_connect_gomoko(self, point, shift):
         """
         Check if the point has connect5 condition in a direction
@@ -437,7 +436,131 @@ class SimpleGoBoard(object):
                 return True, BLACK
 
         return False, None
+    
+    def check_from_one_direction(self,point,shift):
+        """
+        For any given empty point on given shifting position,
+        check the number of blacks or whites on positive and negative diretion
+        and the number of empty after blacks or white.
+        Get the maxmum number of whites or blacks and record the color
 
+        """
+        p = point + shift
+        positive_BW_count = 0
+        positive_empty_count = 0
+        c1 = self.get_color(p)
+        if c1 == BLACK or c1 == WHITE:
+            while self.get_color(p) == c1:
+                positive_BW_count +=1
+                p += shift
+            while self.get_color(p) == EMPTY and positive_empty_count < 3:
+                positive_empty_count += 1
+                p += shift
+        elif c1 == EMPTY:
+            while positive_empty_count < 3 and self.get_color(p) == EMPTY:
+                positive_empty_count += 1
+                p += shift
+
+        p = point - shift
+        negative_BW_count = 0
+        negative_empty_count = 0
+        c2 = self.get_color(p)
+        if c2 == BLACK or c2 == WHITE:
+            while self.get_color(p) == c1:
+                negative_BW_count +=1
+                p -= shift
+            while self.get_color(p) == EMPTY and negative_empty_count < 3:
+                negative_empty_count += 1
+                p -= shift
+        elif c1 == EMPTY:
+            while negative_empty_count < 3 and self.get_color(p) == EMPTY:
+                negative_empty_count += 1
+                p -= shift
+
+        print("positive_BW_count"+str(positive_BW_count))
+        print("positive_empty_count"+str(positive_empty_count))
+        print("c1 is "+str(c1))
+        print("negative_BW_count"+str(negative_BW_count))
+        print("negative_empty_count"+str(negative_empty_count))
+        print("c2 is "+str(c2))
+
+        count = 0 
+        color = ""
+        """
+        if c1 != EMPTY and c2 != EMPTY :
+            if c1 == c2:
+                count = positive_BW_count + negative_BW_count
+                color = c1
+            else:
+                if positive_BW_count >= negative_BW_count:
+                    count = positive_empty_count
+                    color = c1
+                else:
+                    count = negative_empty_count
+                    color = c2
+        elif c1 == EMPTY and c2 == EMPTY:
+            count = 0
+            color = c1
+        else:
+            if c1 == EMPTY:
+                """
+
+
+
+
+
+    def evaluate_empty_point(self,point):
+        horizontal_mine = 0
+        horizontal_opp = 0
+        vertical_mine = 0
+        vertical_opp = 0
+        dia45_mine = 0
+        dia135_mine = 0
+        value = []
+        #evaluate horizontolly
+
+
+    def AlphaBeta(self,alpha,beta,depth):
+        result = self.check_game_end_gomoku()
+        if depth == 0:
+            return 0
+
+        print("alpha is "+str(alpha)+" beta is "+str(beta))
+        print("result is "+str(result))
+        print("\n"+str(GoBoardUtil.get_twoD_board(self)))
+
+        if result[0]== True:
+            if result[1] == self.current_player:
+                return 1
+            else:
+                return -1
+
+        legal_move = self.legal_move_around_stone_blocks()
+        print("\n legal move are"+ str(legal_move))
+
+        
+        for m in legal_move:
+
+            print("now execute move m: "+str(m))
+            self.play_move_gomoku(m,self.current_player)
+            print("\n"+str(GoBoardUtil.get_twoD_board(self)))
+            print("alpha is "+str(alpha)+" beta is "+str(beta))
+
+            value = -self.AlphaBeta(-beta,-alpha,depth -1)
+            
+            if value > alpha:
+                alpha = value
+
+            self.undo_move()
+            print("undo the board!")
+            print("\n"+str(GoBoardUtil.get_twoD_board(self)))
+
+
+            if value >= beta:
+                return beta
+            
+        return alpha
+            
     def legal_move_around_stone_blocks(self):
 
         legal_move = []

@@ -1,19 +1,18 @@
-play b f2
+play b a1
+play w b1
 showboard
 
-play w e2
+play b a2
+play w b2
 showboard
-play b d3
+
+play b a3
+play w b3
 showboard
-play w d4
+
+play b a4
+play w b4
 showboard
+
 solve
 
-play w a6
-showboard
-play b b3
-showboard
-
-play w c4
-showboard
-solve
