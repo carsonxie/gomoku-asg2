@@ -466,13 +466,13 @@ class SimpleGoBoard(object):
         negative_empty_count = 0
         c2 = self.get_color(p)
         if c2 == BLACK or c2 == WHITE:
-            while self.get_color(p) == c1:
+            while self.get_color(p) == c2:
                 negative_BW_count +=1
                 p -= shift
             while self.get_color(p) == EMPTY and negative_empty_count < 3:
                 negative_empty_count += 1
                 p -= shift
-        elif c1 == EMPTY:
+        elif c2 == EMPTY:
             while negative_empty_count < 3 and self.get_color(p) == EMPTY:
                 negative_empty_count += 1
                 p -= shift
@@ -487,24 +487,42 @@ class SimpleGoBoard(object):
         count = 0 
         color = ""
         """
-        if c1 != EMPTY and c2 != EMPTY :
+        return format:
+        (number_of_max_blacks_or_white, 
+        color,
+        empty_count_at_positive_direction,
+        empty_count_at_negative_direction)
+        """
+
+        if c1 == EMPTY and c2 == EMPTY:
+            count = 0
+            color = c1
+            return(0,EMPTY,2,2)
+
+        elif c1 != EMPTY and c2 != EMPTY :
             if c1 == c2:
                 count = positive_BW_count + negative_BW_count
                 color = c1
+                return(count,color,positive_empty_count,negative_empty_count)
             else:
                 if positive_BW_count >= negative_BW_count:
                     count = positive_empty_count
                     color = c1
+                    return(count,color,positive_empty_count,0)
                 else:
                     count = negative_empty_count
                     color = c2
-        elif c1 == EMPTY and c2 == EMPTY:
-            count = 0
-            color = c1
+                    return(count,color,negative_empty_count,0)
         else:
             if c1 == EMPTY:
-                """
-
+                count = negative_BW_count
+                color = c2
+                return(negative_BW_count,c2,negative_empty_count,positive_empty_count)
+            elif c2 == EMPTY:
+                count = positive_BW_count
+                color = c1
+                return(positive_BW_count,c2,positive_empty_count,negative_empty_count)
+                
 
 
 
