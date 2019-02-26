@@ -232,7 +232,8 @@ class GtpConnection():
         If the winner is opponent or the result is unknown,
         this function only generate the winner or unknown message
         """
-        self.board.AlphaBeta(-10000,10000,2)
+        test = self.board.check_from_one_direction(14,1)
+        print("test result "+str(test))
         
         self.respond("the winner is xx [move] // unknown")
     

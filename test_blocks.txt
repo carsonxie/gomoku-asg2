@@ -1,18 +1,22 @@
-play b a1
-play w b1
+clearboard
+
+play b c1
+play b d1
+play b e1
+play w g1
 showboard
+
 
 play b a2
-play w b2
-showboard
+play w e2
+
 
 play b a3
-play w b3
-showboard
+play b b3
+play w c3
+play w d3
+play b f3 
 
-play b a4
-play w b4
-showboard
 
+showboard
 solve
-
