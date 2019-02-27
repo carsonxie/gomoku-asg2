@@ -89,6 +89,48 @@ class SimpleGoBoard(object):
         self.liberty_of = np.full(self.maxpoint, NULLPOINT, dtype = np.int32)
         self._initialize_empty_points(self.board)
         self._initialize_neighbors()
+        self.transition = {
+            "4C":1000,
+            "4O":800,
+
+            "3C11":150,
+            "3C12":150,
+            "3C21":150,
+            "3C22":150,
+
+            "3O11":100,
+            "3O12":100,
+            "3O21":100,
+            "3O22":100,
+
+            "3C02":75,
+            "3C01":75,
+            "3C20":75,
+            "3C10":75,
+
+            "3O02":50,
+            "3O01":50,
+            "3O20":50,
+            "3O10":50,
+
+            "3C00":0,
+            "3O00":0,
+
+            "2C02":5,
+            "2C20":5,
+
+            "2C22":30,
+            "2C12":30,
+            "2C21":30,
+            "2C11":30,
+
+            "2C00":0,
+            "2C10":0,
+            "2C01":0,
+
+            "0311":25,
+
+        }
 
     #useless in this version
     def copy(self):
@@ -453,14 +495,16 @@ class SimpleGoBoard(object):
             while self.get_color(p) == c1:
                 positive_BW+=1
                 p += d
-            while self.get_color(p) == EMPTY and positive_empty< 3:
+            if positive_BW == 4:
+                return("4"+self.get_O_or_C(c1))
+            while self.get_color(p) == EMPTY and positive_empty< 2:
                 positive_empty+= 1
                 p += d
         elif c1 == EMPTY:
-            while positive_empty< 3 and self.get_color(p) == EMPTY:
+            while positive_empty< 2 and self.get_color(p) == EMPTY:
                 positive_empty+= 1
                 p += d
-
+        
         p = point - d
         negative_BW= 0
         negative_empty= 0
@@ -469,76 +513,81 @@ class SimpleGoBoard(object):
             while self.get_color(p) == c2:
                 negative_BW +=1
                 p -= d
-            while self.get_color(p) == EMPTY and negative_empty < 3:
+            if negative_BW == 4:
+                return("4"+self.get_O_or_C(c2))
+            while self.get_color(p) == EMPTY and negative_empty < 2:
                 negative_empty += 1
                 p -= d
         elif c2 == EMPTY:
-            while negative_empty < 3 and self.get_color(p) == EMPTY:
+            while negative_empty < 2 and self.get_color(p) == EMPTY:
                 negative_empty += 1
                 p -= d
-
+        """
         print("positive_BW_count"+str(positive_BW))
         print("positive_empty_count"+str(positive_empty))
         print("c1 is "+str(c1))
         print("negative_BW_count"+str(negative_BW))
         print("negative_empty_count"+str(negative_empty))
         print("c2 is "+str(c2))
-
         """
-        return format:
-        (number_of_max_blacks_or_white, 
-        color,
-        empty_count_at_positive_direction,
-        empty_count_at_negative_direction)
-        """
-
+        #return format:
+        #(number_of_max_blacks_or_white, 
+        #color,
+        #empty_count_at_positive_direction,
+        #empty_count_at_negative_direction)
+        
         if c1==EMPTY and c2!=EMPTY:
-            return(negative_BW,c2,negative_empty,positive_empty)
+            return(str(negative_BW)+self.get_O_or_C(c2)+str(positive_empty)+str(negative_empty))
         elif c1!=EMPTY and c2==EMPTY:
-            return(positive_BW,c1,positive_empty,negative_empty)
+            return(str(positive_BW)+self.get_O_or_C(c1)+str(positive_empty)+str(negative_empty))
         elif c1 == EMPTY and c2 == EMPTY:
-            return(0,EMPTY,positive_empty,negative_empty)
+            return(str(0)+str(EMPTY)+str(positive_empty)+str(negative_empty))
         else:
             if c1 == c2:
-                return(positive_BW + negative_BW,c1,positive_empty,negative_empty)
+                return(str(positive_BW + negative_BW)+self.get_O_or_C(c1)+str(positive_empty)+str(negative_empty))
             else:
                 if positive_BW >= negative_BW:
-                    return(positive_BW,c1,positive_empty,negative_empty)
+                    return(str(positive_BW)+self.get_O_or_C(c1)+str(positive_empty)+str(negative_empty))
                 else:
-                    return(negative_BW,c2,negative_empty,negative_empty)
+                    return(str(negative_BW)+self.get_O_or_C(c2)+str(positive_empty)+str(negative_empty))
 
-
-
-
-
+    def get_O_or_C(self,c):
+        if c == self.current_player:
+            return "C"
+        else:
+            return "O"
 
     def evaluate_empty_point(self,point):
-        horizontal_mine = 0
-        horizontal_opp = 0
-        vertical_mine = 0
-        vertical_opp = 0
-        dia45_mine = 0
-        dia135_mine = 0
-        value = []
-        #evaluate horizontolly
-
+        shifts = [1,self.NS,-self.NS,self.NS+1,self.NS-1]
+        mark = 0
+        for shift in shifts:
+            code = self.check_from_one_direction(point,shift)
+            if code in self.transition:
+                mark += self.transition[code]
+        
+        return mark
 
     def AlphaBeta(self,alpha,beta,depth):
-        result = self.check_game_end_gomoku()
-        if depth == 0:
-            return 0
 
         print("alpha is "+str(alpha)+" beta is "+str(beta))
-        print("result is "+str(result))
+        
         print("\n"+str(GoBoardUtil.get_twoD_board(self)))
 
-        if result[0]== True:
-            if result[1] == self.current_player:
-                return 1
-            else:
-                return -1
-
         legal_move = self.legal_move_around_stone_blocks()
+
+
+        result = self.check_game_end_gomoku()
+        print("result is "+str(result))
+
+        if depth == 0:
+            if(self.evaluate_empty_point(legal_move[0]) >= 1000):
+                return (self.current_player,0)
+            if(self.evaluate_empty_point(legal_move[0]) >= 800):
+                return (GoBoardUtil.opponent(self.current_player))
+            return (0,self.evaluate_empty_point(legal_move[0]))
+
+        if result[0]== True:
+            return (result[1],0)
         print("\n legal move are"+ str(legal_move))
 
         
@@ -547,22 +596,27 @@ class SimpleGoBoard(object):
             print("now execute move m: "+str(m))
             self.play_move_gomoku(m,self.current_player)
             print("\n"+str(GoBoardUtil.get_twoD_board(self)))
-            print("alpha is "+str(alpha)+" beta is "+str(beta))
 
-            value = -self.AlphaBeta(-beta,-alpha,depth -1)
+            winner,value = self.AlphaBeta(-beta,-alpha,depth -1)
+            value = -value
+            if winner == 1 or winner == 2:
+                return (winner,value) 
             
             if value > alpha:
                 alpha = value
 
+            print("alpha is "+str(alpha)+" beta is "+str(beta))
+
             self.undo_move()
+
             print("undo the board!")
             print("\n"+str(GoBoardUtil.get_twoD_board(self)))
 
 
             if value >= beta:
-                return beta
+                return (0,beta)
             
-        return alpha
+        return (0,alpha)
             
     def legal_move_around_stone_blocks(self):
 
@@ -570,7 +624,7 @@ class SimpleGoBoard(object):
 
         black_points=where1d(self.board == BLACK).tolist()
         white_points=where1d(self.board == WHITE).tolist()
-        not_empty_points = black_points + white_points#print("not empty points"+str(not_empty_points))
+        not_empty_points = black_points + white_points
 
         checking_set = set()
 
@@ -579,7 +633,20 @@ class SimpleGoBoard(object):
             checking_set.update(self._diag_neighbors(point))
 
         for point in checking_set:
-            if self.get_color(point) == EMPTY:#print(str(point)+"    is empty neighber")
+            if self.get_color(point) == EMPTY:
                 legal_move.append(point)
+
+        value = []
+        d = {}
+        for key in legal_move:
+            v=self.evaluate_empty_point(key)
+            value.append(v)
+            d[key] = v
+
+        sorted_value = sorted(d.items(),reverse = True,key = lambda kv:kv[1])
+
+        sorted_legal_move = []
+        for t in sorted_value:
+            sorted_legal_move.append(t[0])
         
-        return legal_move
+        return sorted_legal_move

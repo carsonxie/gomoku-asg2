@@ -12,6 +12,8 @@ from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
 import re
+import signal
+import time
 
 class GtpConnection():
 
@@ -222,7 +224,20 @@ class GtpConnection():
         The argument seconds is an integer 
         in the range 1 <= seconds <= 100. 
         """
-        self.respond("Timelimit is set successfully")
+        timelim = args[0]
+        timelim = int(timelim)
+        #try:
+            #timelim = 
+        #except Exception:
+            #self.respond("No propreate arguments for timelimit")
+            #return 
+            
+        signal.signal(signal.SIGALRM,handler)
+        signal.alarm(timelim)
+
+
+        #self.respond("Timelimit is set successfully")
+        
 
     def solve_cmd(self,args):
         """
@@ -232,9 +247,17 @@ class GtpConnection():
         If the winner is opponent or the result is unknown,
         this function only generate the winner or unknown message
         """
-        test = self.board.check_from_one_direction(14,1)
-        print("test result "+str(test))
-        
+        win_check = self.board.check_game_end_gomoku()
+        if win_check[0] == True:
+            self.respond(int_to_color(win_check[1]))
+            return
+
+        result = self.board.AlphaBeta(-100000,100000,10)
+
+        if result[0] == self.board.current_player:
+            winner = int_to_color(result[0])
+            self.respond(winner)
+
         self.respond("the winner is xx [move] // unknown")
     
     #play
@@ -287,6 +310,11 @@ class GtpConnection():
         """
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
+        try:
+            time.sleep(3)
+        except Timeout:
+            print("take too long")
+
         board_color = args[0].lower()
         color = color_to_int(board_color)
         game_end, winner = self.board.check_game_end_gomoku()
@@ -442,3 +470,13 @@ def color_to_int(c):
     color_to_int = {"b": BLACK , "w": WHITE, "e": EMPTY, 
                     "BORDER": BORDER}
     return color_to_int[c] 
+
+def int_to_color(int):
+    d = {BLACK:"b",WHITE:"w",EMPTY:"e"}
+    return d[int]
+
+def handler(sig,frame):
+    raise Timeout 
+
+class Timeout(Exception):
+    pass
