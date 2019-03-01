@@ -254,7 +254,8 @@ class GtpConnection():
 
         win_check = self.board.check_game_end_gomoku()
         if win_check[0] == True:
-            self.respond(int_to_color(win_check[1]))
+            if args != "flag":
+                self.respond(int_to_color(win_check[1]))
             return None
 
         self.board.start_player = self.board.current_player
@@ -264,21 +265,24 @@ class GtpConnection():
         print("The win move is "+str(self.board.win_move))
         
         if result == None:
-            self.respond("unknow")
+            if args != "flag":
+                self.respond("unknow")
             return None
 
         if result == 1:
             winner = int_to_color(result)
             win_move = self.board.win_move
-            if args == "flag":
+            if args != "flag":
                 self.respond(winner + " " + win_move)
             return (winner,win_move)
 
         if result == 0:
-            self.respond("draw "+self.board.win_move)
+            if args != "flag":
+                self.respond("draw "+self.board.win_move)
 
         if result == -1:
-            self.respond(int_to_color(GoBoardUtil.opponent(self.board.current_player)))
+            if args != "flag":
+                self.respond(int_to_color(GoBoardUtil.opponent(self.board.current_player)))
 
 
 
