@@ -89,6 +89,10 @@ class SimpleGoBoard(object):
         self.liberty_of = np.full(self.maxpoint, NULLPOINT, dtype = np.int32)
         self._initialize_empty_points(self.board)
         self._initialize_neighbors()
+        self.continue_to_search = True
+        self.win_move = None
+        self.accumulate_count = 0
+        self.start_player = None
         self.transition = {
             "4C":1000,
             "4O":800,
@@ -522,14 +526,7 @@ class SimpleGoBoard(object):
             while negative_empty < 2 and self.get_color(p) == EMPTY:
                 negative_empty += 1
                 p -= d
-        """
-        print("positive_BW_count"+str(positive_BW))
-        print("positive_empty_count"+str(positive_empty))
-        print("c1 is "+str(c1))
-        print("negative_BW_count"+str(negative_BW))
-        print("negative_empty_count"+str(negative_empty))
-        print("c2 is "+str(c2))
-        """
+
         #return format:
         #(number_of_max_blacks_or_white, 
         #color,
@@ -567,86 +564,150 @@ class SimpleGoBoard(object):
         
         return mark
 
-    def AlphaBeta(self,alpha,beta,depth):
 
+    # return (None,None) if stop by timelimit and no bestmove to be find
+    # return
+    def AlphaBeta(self,alpha,beta):
+
+        print("showboard:\n"+str(GoBoardUtil.get_twoD_board(self)))
         print("alpha is "+str(alpha)+" beta is "+str(beta))
-        
-        print("\n"+str(GoBoardUtil.get_twoD_board(self)))
-
-        legal_move = self.legal_move_around_stone_blocks()
 
 
+        if self.continue_to_search == False:
+            print("\n_______The continue flag suggests to stop alphabeta")
+            print("________return (None, None)")
+            return None
+
+        # result is a tuple, 
+        # [Ture:someone wins , False:No one wins
+        # WHITE or BLACK indicate the winner, None indicates No winners]
         result = self.check_game_end_gomoku()
-        print("result is "+str(result))
-
-        if depth == 0:
-            if(self.evaluate_empty_point(legal_move[0]) >= 1000):
-                return (self.current_player,0)
-            if(self.evaluate_empty_point(legal_move[0]) >= 800):
-                return (GoBoardUtil.opponent(self.current_player))
-            return (0,self.evaluate_empty_point(legal_move[0]))
-
-        if result[0]== True:
-            return (result[1],0)
-        print("\n legal move are"+ str(legal_move))
-
         
+
+        #check if someone win
+        if result[0]== True:
+            print("\nNow the player is "+str(self.current_player))
+            print("WIN for opponent and return -1")
+            if result[1] == self.start_player:
+                if self.win_move ==None:
+                    print("___update the win move")
+                    self.win_move= self.move_history[-self.accumulate_count]
+                    self.win_move = format_point(point_to_coord(self.win_move,self.size))
+                    print("_______1 win_move is"+self.win_move)
+            return -1
+        
+        legal_move = self.legal_move_around_stone_blocks()
+        if len(legal_move) == 0:
+            #self.winner = GoBoardUtil.opponent(self.current_player)
+            if self.win_move == None:
+                self.win_move = self.move_history[-self.accumulate_count]
+                self.win_move = format_point(point_to_coord(self.win_move,self.size))
+                print("_______2 win_move is"+self.win_move)
+            print("\nThe result is a draw, return 0")
+            return 0
+
+        self.accumulate_count += 1
         for m in legal_move:
 
-            print("now execute move m: "+str(m))
+            print("\n________play move: "+str(m))
+            print("__________ and call alphabeta again")
             self.play_move_gomoku(m,self.current_player)
-            print("\n"+str(GoBoardUtil.get_twoD_board(self)))
 
-            winner,value = self.AlphaBeta(-beta,-alpha,depth -1)
-            value = -value
-            if winner == 1 or winner == 2:
-                return (winner,value) 
-            
-            if value > alpha:
-                alpha = value
 
-            print("alpha is "+str(alpha)+" beta is "+str(beta))
+            value = self.AlphaBeta(-beta,-alpha)
+
+            if value == None:
+                return None
 
             self.undo_move()
-
             print("undo the board!")
-            print("\n"+str(GoBoardUtil.get_twoD_board(self)))
+            print("showboard:\n"+str(GoBoardUtil.get_twoD_board(self)))
+
+            value = -value
+            print("alpha is "+str(alpha)+" beta is "+str(beta)+"value is "+str(value))
+            if value > alpha:
+                alpha = value
+                if alpha == 1:
+                    self.accumulate_count -= 1
+                    return 1
+
+            
+            print("alpha is "+str(alpha)+" beta is "+str(beta))
+            
 
 
             if value >= beta:
-                return (0,beta)
-            
-        return (0,alpha)
+                self.accumulate_count -= 1
+                return beta
+        
+        self.accumulate_count -= 1
+        return alpha
             
     def legal_move_around_stone_blocks(self):
 
         legal_move = []
 
-        black_points=where1d(self.board == BLACK).tolist()
-        white_points=where1d(self.board == WHITE).tolist()
-        not_empty_points = black_points + white_points
+        empty_point = self.get_empty_points()
 
-        checking_set = set()
+        if len(empty_point) < self.size:
+            legal_move = empty_point
 
-        for point in not_empty_points:
-            checking_set.update(self._neighbors(point))
-            checking_set.update(self._diag_neighbors(point))
+        elif len(empty_point) == self.size * self.size:
+            return empty_point
 
-        for point in checking_set:
-            if self.get_color(point) == EMPTY:
-                legal_move.append(point)
+        else:
+            black_points=where1d(self.board == BLACK).tolist()
+            white_points=where1d(self.board == WHITE).tolist()
+            not_empty_points = black_points + white_points
 
+
+            checking_set = set()
+
+            for point in not_empty_points:
+                checking_set.update(self._neighbors(point))
+                checking_set.update(self._diag_neighbors(point))
+            
+            for point in checking_set:
+                if self.get_color(point) == EMPTY:
+                    legal_move.append(point)
+
+        print("legal_move is "+str(legal_move))
         value = []
         d = {}
         for key in legal_move:
             v=self.evaluate_empty_point(key)
             value.append(v)
             d[key] = v
-
+        print("value is" +str(value))
         sorted_value = sorted(d.items(),reverse = True,key = lambda kv:kv[1])
 
         sorted_legal_move = []
         for t in sorted_value:
             sorted_legal_move.append(t[0])
-        
+
         return sorted_legal_move
+
+def point_to_coord(point, boardsize):
+    """
+    Transform point given as board array index 
+    to (row, col) coordinate representation.
+    Special case: PASS is not transformed
+    """
+    if point == PASS:
+        return PASS
+    else:
+        NS = boardsize + 1
+        return divmod(point, NS)
+        
+def format_point(move):
+    """
+    Return move coordinates as a string such as 'a1', or 'pass'.
+    """
+    column_letters = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
+    #column_letters = "abcdefghjklmnopqrstuvwxyz"
+    if move == PASS:
+        return "pass"
+    row, col = move
+    if not 0 <= row < MAXSIZE or not 0 <= col < MAXSIZE:
+        raise ValueError
+    return column_letters[col - 1]+ str(row) 

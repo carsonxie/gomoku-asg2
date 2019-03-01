@@ -1,4 +1,6 @@
 #test 00, 10, ..., 100 are easy
+
+#pass
 clear_board
 play B B4
 play W B3
@@ -14,6 +16,8 @@ play B F4
 10 solve
 #?[b]
 
+
+# pass
 clear_board
 play B A4
 play W A3
@@ -31,6 +35,7 @@ play B D4
 20 solve
 #?[b]
 
+# pass The answer is [draw] but we have [Draw G5]
 clear_board
 play B D4
 play W E4
@@ -83,6 +88,8 @@ play W G1
 30 solve
 #?[draw]
 
+
+#pass
 clear_board
 play B A7
 play W B7
@@ -137,6 +144,8 @@ play W C3
 50 genmove b
 #?[A3]
 
+
+#pass
 clear_board
 play B D4
 play W E4
@@ -188,6 +197,8 @@ play B A2
 60 solve
 #?[draw]
 
+
+#pass
 clear_board
 play B A7
 play W B7
@@ -239,6 +250,8 @@ play B F3
 70 solve
 #?[b]
 
+
+#pass
 clear_board
 play B A7
 play W B7
@@ -290,6 +303,7 @@ play B G1
 80 solve
 #?[draw]
 
+#pass
 clear_board
 play B A7
 play W B7

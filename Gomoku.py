@@ -24,7 +24,7 @@ def run():
     """
     start the gtp connection and wait for commands.
     """
-    board = SimpleGoBoard(9)
+    board = SimpleGoBoard(7)
     con = GtpConnection(Gomoku(), board)
     con.start_connection()
 

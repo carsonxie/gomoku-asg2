@@ -216,7 +216,12 @@ class GtpConnection():
         sorted_moves = ' '.join(sorted(gtp_moves))
         self.respond(sorted_moves)
 
-    def timelimit_cmd(self,args):
+    def handler(self,sig,frame):
+        self.respond("it takes too long!")
+        self.board.continue_to_search = False
+        return
+
+    def timelimit_cmd(self,args = ["1"]):
         """This command sets the maximum time to 
         use for all following genmove or solve commands, 
         until it is changed by another timelimit command.
@@ -225,18 +230,16 @@ class GtpConnection():
         in the range 1 <= seconds <= 100. 
         """
         timelim = args[0]
-        timelim = int(timelim)
-        #try:
-            #timelim = 
-        #except Exception:
-            #self.respond("No propreate arguments for timelimit")
-            #return 
-            
-        signal.signal(signal.SIGALRM,handler)
-        signal.alarm(timelim)
+        try:
+            sec = int(timelim)
+            if sec < 0 or sec > 100:
+                raise Exception
+        except Exception:
+            self.respond("No propreate arguments for timelimit")
+            return
 
-
-        #self.respond("Timelimit is set successfully")
+        signal.signal(signal.SIGALRM,self.handler)
+        signal.alarm(sec)
         
 
     def solve_cmd(self,args):
@@ -247,18 +250,38 @@ class GtpConnection():
         If the winner is opponent or the result is unknown,
         this function only generate the winner or unknown message
         """
+
+
         win_check = self.board.check_game_end_gomoku()
         if win_check[0] == True:
             self.respond(int_to_color(win_check[1]))
-            return
+            return None
 
-        result = self.board.AlphaBeta(-100000,100000,10)
+        self.board.start_player = self.board.current_player
+        print("self.board.startplayer is "+str(self.board.start_player))
+        result = self.board.AlphaBeta(-100,11)
+        print("\n\nresult in solve "+str(result))
+        print("The win move is "+str(self.board.win_move))
+        
+        if result == None:
+            self.respond("unknow")
+            return None
 
-        if result[0] == self.board.current_player:
-            winner = int_to_color(result[0])
-            self.respond(winner)
+        if result == 1:
+            winner = int_to_color(result)
+            win_move = self.board.win_move
+            self.respond(winner + " " + win_move)
+            return (winner,win_move)
 
-        self.respond("the winner is xx [move] // unknown")
+        if result == 0:
+            self.respond("draw "+self.board.win_move)
+
+        if result == -1:
+            self.respond(int_to_color(GoBoardUtil.opponent(self.board.current_player)))
+
+
+
+        
     
     #play
     def play_cmd(self, args):
@@ -310,11 +333,13 @@ class GtpConnection():
         """
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
-        try:
-            time.sleep(3)
-        except Timeout:
-            print("take too long")
-
+        result = self.solve_cmd(0)
+        print(result)
+        if result != None:
+            print("result in genmove"+str(result))
+            self.respond(result[1])
+            return
+        
         board_color = args[0].lower()
         color = color_to_int(board_color)
         game_end, winner = self.board.check_game_end_gomoku()
@@ -474,9 +499,3 @@ def color_to_int(c):
 def int_to_color(int):
     d = {BLACK:"b",WHITE:"w",EMPTY:"e"}
     return d[int]
-
-def handler(sig,frame):
-    raise Timeout 
-
-class Timeout(Exception):
-    pass
