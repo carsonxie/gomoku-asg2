@@ -270,7 +270,8 @@ class GtpConnection():
         if result == 1:
             winner = int_to_color(result)
             win_move = self.board.win_move
-            self.respond(winner + " " + win_move)
+            if args == "flag":
+                self.respond(winner + " " + win_move)
             return (winner,win_move)
 
         if result == 0:
@@ -333,7 +334,7 @@ class GtpConnection():
         """
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
-        result = self.solve_cmd(0)
+        result = self.solve_cmd("flag")
         print(result)
         if result != None:
             print("result in genmove"+str(result))
